@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>縮小大冒險：幫燁琳老師接橋救小白！</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Custom pulse and bounce animations */
+        @keyframes float-sun {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-4px) rotate(8deg); }
+        }
+
+        .animate-sun {
+            animation: float-sun 3s ease-in-out infinite;
+        }
+
+        .wood-pattern {
+            background-color: #854d0e;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 2px, transparent 2px, transparent 8px);
+        }
+
+        .stick-btn {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .stick-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .stick-btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        /* Dragging styles */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+        }
+
+        .drop-target-active {
+            filter: drop-shadow(0 0 12px #38bdf8);
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* Smooth Walking Feet Alternating Motion (horizontal flat movement) */
+        @keyframes YelinFeetWalk {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.85); }
+        }
+        .is-walking .yelin-legs {
+            animation: YelinFeetWalk 0.2s infinite ease-in-out;
+            transform-origin: top;
+        }
+        
+        .char-transition {
+            transition: transform 0.05s linear;
+        }
+    </style>
+</head>
+<body class="bg-sky-100 min-h-screen text-slate-800 flex flex-col justify-between p-2 sm:p-4">
+
+    <!-- Top Header Navigation Bar -->
+    <header class="max-w-4xl mx-auto w-full bg-white rounded-2xl shadow-sm border border-sky-200 p-3 sm:p-4 mb-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-400 rounded-xl flex items-center justify-center text-xl sm:text-2xl shadow-md border-2 border-amber-300">
+                🔍
+            </div>
+            <div>
+                <h1 class="font-black text-slate-800 text-base sm:text-xl flex items-center gap-2">
+                    小人國冒險：斷崖接橋戰！
+                    <span class="text-xs bg-rose-500 text-white px-2 py-0.5 rounded-full font-bold animate-pulse">數學挑戰</span>
+                </h1>
+                <p class="text-xs text-slate-500 font-medium hidden sm:block">協助燁琳老師挑選正確樹枝，組合大於 97 公分的木橋！</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Audio Toggle Button -->
+            <button id="soundToggle" class="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+                <span id="soundText" class="hidden sm:inline">音效 ON</span>
+            </button>
+            
+            <!-- Guide Button -->
+            <button id="mathGuideBtn" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-black transition shadow-sm flex items-center gap-1 cursor-pointer">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>解題技巧</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Interactive Container -->
+    <main class="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-3">
+
+        <!-- Story Prompt Banner -->
+        <div class="bg-white/95 border-2 border-sky-200 rounded-2xl p-3 sm:p-4 shadow-sm relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                <div class="flex-shrink-0 bg-amber-100 text-amber-700 rounded-full p-2.5 text-xl font-black animate-bounce">
+                    🖐️
+                </div>
+                <div class="text-xs sm:text-sm md:text-base leading-relaxed text-slate-700">
+                    <span class="font-bold text-sky-900">玩法提示：</span>
+                    請把下方的樹枝<span class="font-bold text-emerald-700">「直接拖曳」到斷崖虛線處</span>（接在 22cm 舊橋後面），或是點擊樹枝選擇！目標讓總長度 <span class="font-black text-rose-600 underline">大於 97 公分</span>！
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Canvas / Visual Scene -->
+        <div id="dropZone" class="relative w-full bg-sky-200 rounded-2xl border-4 border-white shadow-xl overflow-hidden h-[340px] sm:h-[400px] transition-all">
+            
+            <!-- Dynamic Drag Hint Drop Overlay -->
+            <div id="dropHintOverlay" class="absolute inset-0 bg-sky-500/10 backdrop-blur-[1px] border-4 border-dashed border-sky-400 rounded-xl z-20 pointer-events-none opacity-0 transition-opacity flex items-center justify-center">
+                <div class="bg-white/90 text-sky-800 font-black px-6 py-3 rounded-full shadow-lg border border-sky-300 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-hand-pointer text-sky-500 animate-bounce"></i>
+                    放開樹枝接上橋樑！
+                </div>
+            </div>
+
+            <!-- Top HUD Bar -->
+            <div class="absolute top-3 left-3 right-3 z-10 flex items-center justify-between">
+                <!-- Heat Bar Card -->
+                <div class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-2xl border-2 border-white shadow-md flex items-center gap-3">
+                    <i class="fa-solid fa-sun text-2xl text-amber-500 animate-sun"></i>
+                    <div>
+                        <div class="text-xs sm:text-sm font-black text-amber-900">小白的太陽烤焦指數</div>
+                        <div class="w-28 sm:w-44 bg-amber-200 rounded-full h-3 overflow-hidden border border-amber-300 mt-1">
+                            <div id="heatBar" class="bg-gradient-to-r from-amber-400 to-rose-500 h-full w-[85%] transition-all duration-500"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distance HUD Tag -->
+                <div class="bg-slate-700/85 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md backdrop-blur-sm border border-slate-600">
+                    <i class="fa-solid fa-ruler-horizontal text-sky-300"></i>
+                    <span>斷崖距離：97 cm</span>
+                </div>
+            </div>
+
+            <!-- SVG Scene Container -->
+            <svg id="sceneSvg" class="w-full h-full" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                    <!-- Cliff Color Gradient -->
+                    <linearGradient id="cliffGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#653819"/>
+                        <stop offset="100%" stop-color="#45230d"/>
+                    </linearGradient>
+                </defs>
+
+                <!-- Background Sky Color Fill -->
+                <rect width="800" height="400" fill="#a5f3fc"/>
+
+                <!-- LEFT CLIFF (枕頭山) -->
+                <g id="leftCliffGroup">
+                    <!-- Brown Rock Body -->
+                    <polygon points="0,240 240,240 255,400 0,400" fill="url(#cliffGrad)"/>
+                    <!-- Green Grass Cap -->
+                    <path d="M -10,240 Q 120,236 245,240 L 245,262 Q 120,266 -10,262 Z" fill="#10b981"/>
+                    
+                    <!-- Mountain Label Signboard -->
+                    <rect x="45" y="200" width="95" height="36" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="2.5"/>
+                    <text x="92.5" y="224" font-weight="900" font-size="16" fill="#78350f" text-anchor="middle">枕頭山</text>
+                </g>
+
+                <!-- RIGHT CLIFF (頭枕山) -->
+                <g id="rightCliffGroup">
+                    <!-- Brown Rock Body -->
+                    <polygon points="560,240 800,240 800,400 545,400" fill="url(#cliffGrad)"/>
+                    <!-- Green Grass Cap -->
+                    <path d="M 555,240 Q 680,236 810,240 L 810,262 Q 680,266 555,262 Z" fill="#10b981"/>
+                    
+                    <!-- Mountain Label Signboard -->
+                    <rect x="660" y="200" width="95" height="36" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="2.5"/>
+                    <text x="707.5" y="224" font-weight="900" font-size="16" fill="#78350f" text-anchor="middle">頭枕山</text>
+                </g>
+
+                <!-- DASHED TARGET BASELINE & TEXT (Shifted upward to y=178/156) -->
+                <g id="targetDashedLineGroup">
+                    <rect x="330" y="156" width="140" height="20" rx="6" fill="#ffe4e6" stroke="#f43f5e" stroke-width="1.5"/>
+                    <text x="400" y="170" font-weight="900" font-size="11" fill="#9f1239" text-anchor="middle">斷崖跨越目標：97 cm</text>
+                </g>
+
+                <!-- FIXED OLD BRIDGE ON LEFT (22 cm) -->
+                <g id="fixedBridgeGroup" transform="translate(240, 248)">
+                    <!-- Dark Plank Base -->
+                    <rect x="0" y="0" width="73" height="18" rx="3" fill="#582f0e" stroke="#331800" stroke-width="2"/>
+                    <!-- Planks Detail Lines -->
+                    <line x1="18" y1="0" x2="18" y2="18" stroke="#331800" stroke-width="1.5"/>
+                    <line x1="36" y1="0" x2="36" y2="18" stroke="#331800" stroke-width="1.5"/>
+                    <line x1="54" y1="0" x2="54" y2="18" stroke="#331800" stroke-width="1.5"/>
+                    <!-- Bridge Tag Badge -->
+                    <rect x="2" y="-22" width="70" height="18" rx="5" fill="#f59e0b" stroke="#78350f" stroke-width="1.5"/>
+                    <text x="37" y="-9" font-weight="900" font-size="10" fill="#451a03" text-anchor="middle">舊橋 22cm</text>
+                </g>
+
+                <!-- INTERACTIVE DROP ZONE DASHED HIGHLIGHT BOX -->
+                <g id="dropZoneIndicator" transform="translate(313, 244)">
+                    <rect id="dropZoneRect" x="0" y="0" width="247" height="26" rx="6" fill="#0284c7" fill-opacity="0.05" stroke="#0284c7" stroke-width="2" stroke-dasharray="6,4"/>
+                    <text id="dropZoneText" x="123" y="17" font-weight="900" font-size="11" fill="#0369a1" text-anchor="middle">把樹枝拖到這裡接橋 🪵</text>
+                </g>
+
+                <!-- EXTENSION DYNAMIC BRIDGE (Stick 1 + Stick 2) -->
+                <g id="dynamicBridgeGroup" transform="translate(313, 248)">
+                    <!-- Dynamically populated via JS when dragging/placing sticks -->
+                </g>
+
+                <!-- YELIN CHARACTER (LEFT) -->
+                <g id="yelinChar" class="char-transition" transform="translate(160, 182)">
+                    <!-- Name Tag -->
+                    <rect x="-8" y="-12" width="60" height="20" rx="5" fill="#0284c7" stroke="#ffffff" stroke-width="1.5"/>
+                    <text x="22" y="2" font-weight="900" font-size="11" fill="#ffffff" text-anchor="middle">燁琳老師</text>
+
+                    <!-- Explorer Yellow Hat -->
+                    <path d="M 5,14 Q 22,-2 39,14 Z" fill="#eab308"/>
+                    <ellipse cx="22" cy="14" rx="20" ry="4" fill="#ca8a04"/>
+
+                    <!-- Head -->
+                    <circle cx="22" cy="23" r="11" fill="#fed7aa"/>
+                    <!-- Eyes & Smile -->
+                    <circle cx="18" cy="22" r="1.8" fill="#0f172a"/>
+                    <circle cx="26" cy="22" r="1.8" fill="#0f172a"/>
+                    <path d="M 19,27 Q 22,30 25,27" fill="none" stroke="#e11d48" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="15" cy="25" r="2" fill="#f43f5e" opacity="0.4"/>
+                    <circle cx="29" cy="25" r="2" fill="#f43f5e" opacity="0.4"/>
+
+                    <!-- Blue Shirt Body & Legs -->
+                    <rect x="16" y="34" width="12" height="18" rx="2" fill="#0284c7"/>
+                    <g class="yelin-legs">
+                        <line x1="19" y1="52" x2="19" y2="64" stroke="#0f172a" stroke-width="3"/>
+                        <line x1="25" y1="52" x2="25" y2="64" stroke="#0f172a" stroke-width="3"/>
+                    </g>
+
+                    <!-- Waving Arms -->
+                    <line x1="16" y1="36" x2="6" y2="46" stroke="#0284c7" stroke-width="3.5" stroke-linecap="round"/>
+                    <line x1="28" y1="36" x2="38" y2="28" stroke="#0284c7" stroke-width="3.5" stroke-linecap="round"/>
+
+                    <!-- Victory Sun Umbrella (Hidden initially) -->
+                    <g id="victoryUmbrella" opacity="0">
+                        <path d="M 20,-15 Q 45,-38 70,-15 Z" fill="#f43f5e"/>
+                        <line x1="45" y1="-15" x2="45" y2="35" stroke="#475569" stroke-width="2.5"/>
+                    </g>
+                </g>
+
+                <!-- XIAOBAI CHARACTER (RIGHT) -->
+                <g id="xiaobaiChar" transform="translate(710, 182)">
+                    <!-- Name Tag -->
+                    <rect x="-8" y="-12" width="60" height="20" rx="5" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5"/>
+                    <text x="22" y="2" font-weight="900" font-size="11" fill="#ffffff" text-anchor="middle">小白老師</text>
+
+                    <!-- Head & Sweating Droplets -->
+                    <circle cx="22" cy="23" r="11" fill="#fed7aa"/>
+                    <!-- Sweat drop -->
+                    <path d="M 32,16 Q 35,21 32,23 Q 29,21 32,16 Z" fill="#38bdf8"/>
+                    
+                    <!-- Worried Eyes & Mouth -->
+                    <path d="M 15,20 L 20,23" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 29,20 L 24,23" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 19,27 Q 22,24 25,27" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+                    <!-- Red Shirt Body & Legs -->
+                    <rect x="16" y="34" width="12" height="18" rx="2" fill="#f43f5e"/>
+                    <line x1="19" y1="52" x2="19" y2="64" stroke="#0f172a" stroke-width="3"/>
+                    <line x1="25" y1="52" x2="25" y2="64" stroke="#0f172a" stroke-width="3"/>
+
+                    <!-- Raising Arms for Help -->
+                    <line x1="16" y1="36" x2="6" y2="24" stroke="#f43f5e" stroke-width="3.5" stroke-linecap="round"/>
+                    <line x1="28" y1="36" x2="38" y2="24" stroke="#f43f5e" stroke-width="3.5" stroke-linecap="round"/>
+                </g>
+
+            </svg>
+        </div>
+
+        <!-- Interactive Control Panel -->
+        <div class="bg-white rounded-2xl p-4 shadow-md border border-sky-200 flex flex-col gap-4">
+            
+            <!-- Step 1: Inventory of Available Sticks -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-black text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">1</span>
+                        選擇或拖曳 2 根樹枝：
+                    </h3>
+                    <span class="text-xs font-bold text-slate-400">點擊或按住樹枝拖到斷崖處！</span>
+                </div>
+
+                <!-- 3 Sticks Buttons Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    
+                    <!-- Stick 19cm -->
+                    <div data-len="19" draggable="true" class="stick-btn stick-option relative border-2 border-slate-200 hover:border-emerald-400 rounded-xl p-3 bg-slate-50 flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing transition select-none">
+                        <div class="w-full flex items-center justify-between text-xs font-bold text-slate-600">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-grip-vertical text-slate-300"></i> 樹枝 A</span>
+                            <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-black">19 cm</span>
+                        </div>
+                        <div class="w-full bg-amber-100/50 rounded-xl h-10 flex items-center justify-center px-2 relative overflow-hidden pointer-events-none">
+                            <div class="w-[40%] h-4 rounded-full bg-amber-800 wood-pattern shadow-md border border-amber-900 flex items-center justify-center relative">
+                                <span class="text-[10px] font-black text-white bg-amber-900/90 px-1.5 py-0.2 rounded-full -top-2.5 absolute shadow-sm border border-amber-600">19 cm</span>
+                            </div>
+                        </div>
+                        <div class="check-badge hidden absolute -top-2 -right-2 bg-emerald-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-md">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                    </div>
+
+                    <!-- Stick 21cm -->
+                    <div data-len="21" draggable="true" class="stick-btn stick-option relative border-2 border-slate-200 hover:border-emerald-400 rounded-xl p-3 bg-slate-50 flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing transition select-none">
+                        <div class="w-full flex items-center justify-between text-xs font-bold text-slate-600">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-grip-vertical text-slate-300"></i> 樹枝 B</span>
+                            <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-black">21 cm</span>
+                        </div>
+                        <div class="w-full bg-amber-100/50 rounded-xl h-10 flex items-center justify-center px-2 relative overflow-hidden pointer-events-none">
+                            <div class="w-[52%] h-4 rounded-full bg-amber-800 wood-pattern shadow-md border border-amber-900 flex items-center justify-center relative">
+                                <span class="text-[10px] font-black text-white bg-amber-900/90 px-1.5 py-0.2 rounded-full -top-2.5 absolute shadow-sm border border-amber-600">21 cm</span>
+                            </div>
+                        </div>
+                        <div class="check-badge hidden absolute -top-2 -right-2 bg-emerald-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-md">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                    </div>
+
+                    <!-- Stick 55cm -->
+                    <div data-len="55" draggable="true" class="stick-btn stick-option relative border-2 border-slate-200 hover:border-emerald-400 rounded-xl p-3 bg-slate-50 flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing transition select-none">
+                        <div class="w-full flex items-center justify-between text-xs font-bold text-slate-600">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-grip-vertical text-slate-300"></i> 樹枝 C</span>
+                            <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-black">55 cm</span>
+                        </div>
+                        <div class="w-full bg-amber-100/50 rounded-xl h-10 flex items-center justify-center px-2 relative overflow-hidden pointer-events-none">
+                            <div class="w-[95%] h-4 rounded-full bg-amber-800 wood-pattern shadow-md border border-amber-900 flex items-center justify-center relative">
+                                <span class="text-[10px] font-black text-white bg-amber-900/90 px-1.5 py-0.2 rounded-full -top-2.5 absolute shadow-sm border border-amber-600">55 cm</span>
+                            </div>
+                        </div>
+                        <div class="check-badge hidden absolute -top-2 -right-2 bg-emerald-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-md">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Step 2: Bridge Equation & Calculation HUD -->
+            <div class="border-t border-slate-100 pt-3">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-black text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs">2</span>
+                        兩步驟木橋總長度算式：
+                    </h3>
+                    <button id="resetBtn" class="text-xs font-bold text-slate-400 hover:text-rose-500 transition flex items-center gap-1 cursor-pointer">
+                        <i class="fa-solid fa-rotate-right"></i> 重設樹枝
+                    </button>
+                </div>
+
+                <!-- Live Two-Step Equation Display -->
+                <div class="bg-sky-50/80 rounded-xl p-3 border border-sky-200 flex flex-col gap-2.5">
+                    
+                    <!-- Step 1 Line: 22 + Stick 1 = Intermediate Sum -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 text-center text-xs sm:text-sm">
+                        <span class="font-black text-slate-500 bg-white px-2 py-1 rounded-md border border-slate-200">步驟 1</span>
+                        <div class="bg-amber-700 text-white px-2.5 py-1 rounded-lg font-black shadow-sm">舊橋 22cm</div>
+                        <span class="font-black text-slate-400 text-base">+</span>
+                        <div id="slot1" class="min-w-[75px] h-9 px-2 bg-white border-2 border-dashed border-sky-300 rounded-lg flex items-center justify-center text-sky-600 font-bold shadow-inner transition-all">
+                            樹枝 1
+                        </div>
+                        <span class="font-black text-slate-400 text-base">=</span>
+                        <div id="step1Box" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg min-w-[70px] font-bold">
+                            ? cm
+                        </div>
+                    </div>
+
+                    <!-- Step 2 Line: Intermediate Sum + Stick 2 = Final Total -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 text-center text-xs sm:text-sm pt-2 border-t border-sky-200/60">
+                        <span class="font-black text-slate-500 bg-white px-2 py-1 rounded-md border border-slate-200">步驟 2</span>
+                        <div id="step1CarryBox" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg min-w-[70px] font-bold">
+                            ? cm
+                        </div>
+                        <span class="font-black text-slate-400 text-base">+</span>
+                        <div id="slot2" class="min-w-[75px] h-9 px-2 bg-white border-2 border-dashed border-sky-300 rounded-lg flex items-center justify-center text-sky-600 font-bold shadow-inner transition-all">
+                            樹枝 2
+                        </div>
+                        <span class="font-black text-slate-400 text-base">=</span>
+                        <div id="totalBox" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg min-w-[80px] font-bold">
+                            ? cm
+                        </div>
+                    </div>
+
+                    <!-- Final Answer Badge -->
+                    <div id="finalAnswerBadge" class="text-center font-black text-slate-600 bg-white border border-slate-200 rounded-lg py-1 px-3 mt-1 text-sm sm:text-base">
+                        答：木橋總長度為 <span id="finalAnsText" class="text-slate-400">?</span> 公分
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Step 3: Test Bridge Action Button -->
+            <div class="flex justify-center pt-1">
+                <button id="testBridgeBtn" disabled class="flex-1 max-w-sm py-3 px-6 rounded-xl bg-slate-300 text-slate-500 font-black text-base transition shadow-md flex items-center justify-center gap-2 cursor-not-allowed">
+                    <i class="fa-solid fa-hammer"></i>
+                    <span id="testBtnText">請選取 2 根樹枝接橋</span>
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- RESULT MODAL DIALOG -->
+    <div id="resultModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div id="modalCard" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-amber-300 transform scale-90 transition-all duration-300 relative text-center">
+            
+            <div id="modalIconContainer" class="w-20 h-20 mx-auto -mt-14 rounded-full flex items-center justify-center text-4xl shadow-lg mb-4 bg-emerald-500 text-white border-4 border-white">
+                🎉
+            </div>
+
+            <h2 id="modalTitle" class="font-black text-2xl text-slate-800 mb-2">恭喜成功過橋！</h2>
+            <div id="modalFormula" class="bg-amber-50 text-amber-900 border border-amber-200 rounded-xl p-3 font-black text-sm sm:text-base mb-3 leading-relaxed">
+                22 + 21 = 43 cm<br/>43 + 55 = 98 cm<br/><span class="text-emerald-700 text-lg">答：98 公分 (> 97cm)</span>
+            </div>
+            
+            <p id="modalDesc" class="text-slate-600 text-sm leading-relaxed mb-5">
+                燁琳老師成功帶著遮陽傘走過大木橋，及時幫小白老師擋住了刺眼的太陽！兩人開心地在山頂合照留念！
+            </p>
+
+            <!-- Polarizing Camera Photo Preview -->
+            <div id="photoFrame" class="bg-slate-100 p-3 rounded-2xl border-2 border-slate-200 mb-5 shadow-inner">
+                <div class="bg-sky-200 rounded-xl p-4 flex items-center justify-center gap-4 relative overflow-hidden">
+                    <div class="text-3xl">👧🏻☂️</div>
+                    <div class="text-xs font-black bg-white px-2 py-1 rounded-full text-sky-800 shadow-sm">山頂合照 📸</div>
+                    <div class="text-3xl">👧🏽✨</div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="modalCloseBtn" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer">
+                    再試一次
+                </button>
+                <button id="modalMathGuideBtn" class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl shadow-md transition cursor-pointer">
+                    查看數學觀念
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- EDUCATIONAL MATH GUIDE MODAL -->
+    <div id="guideModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-4 border-sky-300 relative">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <h3 class="font-black text-slate-800 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-sky-500"></i>
+                    解題數學兩步驟大解析
+                </h3>
+                <button id="guideCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 flex items-center justify-center cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-slate-700">
+                <div class="bg-sky-50 p-3 rounded-xl border border-sky-200">
+                    <strong class="text-sky-900 block mb-1">🎯 兩步驟列式與計算：</strong>
+                    先將舊木橋（22cm）加上第 1 根樹枝算出階段長度，再拿階段長度加上第 2 根樹枝，比比看總長度是否大於 97 公分！
+                </div>
+
+                <div>
+                    <strong class="text-slate-800 font-black block mb-2">3 根樹枝（19cm、21cm、55cm）取 2 根的所有組合：</strong>
+                    
+                    <div class="space-y-2">
+                        <div class="p-2.5 rounded-lg border border-rose-200 bg-rose-50 text-xs sm:text-sm">
+                            <div class="font-bold text-rose-800">❌ 組合 1（選 19cm 與 21cm）：</div>
+                            <div>① 22 + 19 = 41 cm</div>
+                            <div>② 41 + 21 = 62 cm</div>
+                            <div class="font-bold text-rose-600 mt-0.5">答：62 公分 (比 97cm 太短)</div>
+                        </div>
+
+                        <div class="p-2.5 rounded-lg border border-rose-200 bg-rose-50 text-xs sm:text-sm">
+                            <div class="font-bold text-rose-800">❌ 組合 2（選 19cm 與 55cm）：</div>
+                            <div>① 22 + 19 = 41 cm</div>
+                            <div>② 41 + 55 = 96 cm</div>
+                            <div class="font-bold text-rose-600 mt-0.5">答：96 公分 (差 1 公分!)</div>
+                        </div>
+
+                        <div class="p-2.5 rounded-lg border-2 border-emerald-400 bg-emerald-50 text-xs sm:text-sm font-bold">
+                            <div class="text-emerald-900">✅ 組合 3（選 21cm 與 55cm）：</div>
+                            <div class="text-emerald-800">① 22 + 21 = 43 cm</div>
+                            <div class="text-emerald-800">② 43 + 55 = 98 cm</div>
+                            <div class="text-emerald-700 text-sm mt-0.5">答：98 公分 (大於 97cm 成功過橋!)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900 text-xs">
+                    💡 <strong>解題小撇步：</strong> 先算第一步（舊橋+第一根樹枝），再算第二步（結果+第二根樹枝）。挑選最長的兩根樹枝（21cm 與 55cm）接起來最長！
+                </div>
+            </div>
+
+            <button id="guideCloseBtn2" onclick="document.getElementById('guideModal').classList.add('opacity-0', 'pointer-events-none')" class="w-full mt-5 py-3 bg-sky-500 hover:bg-sky-600 text-white font-black rounded-xl shadow-md transition cursor-pointer">
+                我懂了！回遊戲測試
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API Sound Synthesizer
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+            }
+
+            playTone(freq, type, duration, startVol = 0.1) {
+                if (!this.enabled) return;
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(startVol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) { console.error(e); }
+            }
+
+            playClick() {
+                this.playTone(520, 'sine', 0.08, 0.15);
+            }
+
+            playSnap() {
+                this.playTone(680, 'triangle', 0.12, 0.2);
+            }
+
+            playBuild() {
+                this.playTone(320, 'triangle', 0.15, 0.2);
+            }
+
+            playFail() {
+                if (!this.enabled) return;
+                this.init();
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(280, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.5);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(now + 0.5);
+                } catch(e) {}
+            }
+
+            playWin() {
+                if (!this.enabled) return;
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        this.playTone(freq, 'triangle', 0.3, 0.25);
+                    }, i * 120);
+                });
+            }
+        }
+
+        const sound = new SoundFX();
+
+        // App State
+        const FIXED_LENGTH = 22;
+        const TARGET_GAP = 97;
+        const SCALE_PX_PER_CM = 3.3; // 97cm = 320px in SVG canvas (x=240 to x=560)
+        let selectedSticks = [];
+        let draggedStickLength = null;
+
+        // Safely Initialize App Logic inside DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Safe DOM Element Queries
+            const stickBtns = document.querySelectorAll('.stick-option');
+            const dropZone = document.getElementById('dropZone');
+            const dropHintOverlay = document.getElementById('dropHintOverlay');
+            const dropZoneText = document.getElementById('dropZoneText');
+            
+            const slot1 = document.getElementById('slot1');
+            const slot2 = document.getElementById('slot2');
+            const step1Box = document.getElementById('step1Box');
+            const step1CarryBox = document.getElementById('step1CarryBox');
+            const totalBox = document.getElementById('totalBox');
+            const finalAnsText = document.getElementById('finalAnsText');
+            const finalAnswerBadge = document.getElementById('finalAnswerBadge');
+
+            const testBridgeBtn = document.getElementById('testBridgeBtn');
+            const testBtnText = document.getElementById('testBtnText');
+            const resetBtn = document.getElementById('resetBtn');
+
+            const dynamicBridgeGroup = document.getElementById('dynamicBridgeGroup');
+            const yelinChar = document.getElementById('yelinChar');
+            const victoryUmbrella = document.getElementById('victoryUmbrella');
+
+            const resultModal = document.getElementById('resultModal');
+            const modalCard = document.getElementById('modalCard');
+            const modalIconContainer = document.getElementById('modalIconContainer');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalFormula = document.getElementById('modalFormula');
+            const modalDesc = document.getElementById('modalDesc');
+            const photoFrame = document.getElementById('photoFrame');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+            const modalMathGuideBtn = document.getElementById('modalMathGuideBtn');
+
+            const guideModal = document.getElementById('guideModal');
+            const mathGuideBtn = document.getElementById('mathGuideBtn');
+            const guideCloseBtn = document.getElementById('guideCloseBtn');
+
+            const soundToggle = document.getElementById('soundToggle');
+            const soundIcon = document.getElementById('soundIcon');
+            const soundText = document.getElementById('soundText');
+
+            // Audio Toggle logic
+            if (soundToggle) {
+                soundToggle.addEventListener('click', () => {
+                    sound.enabled = !sound.enabled;
+                    if (sound.enabled) {
+                        if (soundIcon) soundIcon.className = "fa-solid fa-volume-high";
+                        if (soundText) soundText.textContent = "音效 ON";
+                        sound.playClick();
+                    } else {
+                        if (soundIcon) soundIcon.className = "fa-solid fa-volume-xmark";
+                        if (soundText) soundText.textContent = "音效 OFF";
+                    }
+                });
+            }
+
+            // Helper to Add/Toggle Stick
+            function addOrToggleStick(len) {
+                const index = selectedSticks.indexOf(len);
+                if (index > -1) {
+                    selectedSticks.splice(index, 1);
+                } else {
+                    if (selectedSticks.length < 2) {
+                        selectedSticks.push(len);
+                    } else {
+                        selectedSticks[1] = len;
+                    }
+                }
+                sound.playSnap();
+                renderDynamicBridgePreview();
+                updateUI();
+            }
+
+            // DRAG & DROP LISTENERS (Mouse + Touch)
+            stickBtns.forEach(btn => {
+                const len = parseInt(btn.dataset.len);
+
+                btn.addEventListener('click', () => {
+                    if (btn.classList.contains('is-dragging')) return;
+                    sound.playClick();
+                    addOrToggleStick(len);
+                });
+
+                btn.addEventListener('dragstart', (e) => {
+                    draggedStickLength = len;
+                    btn.classList.add('dragging');
+                    if (e.dataTransfer) {
+                        e.dataTransfer.setData('text/plain', len);
+                    }
+                    if (dropHintOverlay) dropHintOverlay.classList.remove('opacity-0');
+                });
+
+                btn.addEventListener('dragend', () => {
+                    btn.classList.remove('dragging');
+                    if (dropHintOverlay) dropHintOverlay.classList.add('opacity-0');
+                });
+
+                btn.addEventListener('touchstart', () => {
+                    draggedStickLength = len;
+                    btn.classList.add('is-dragging');
+                    if (dropHintOverlay) dropHintOverlay.classList.remove('opacity-0');
+                }, { passive: true });
+
+                btn.addEventListener('touchend', (e) => {
+                    if (dropHintOverlay) dropHintOverlay.classList.add('opacity-0');
+                    if (!dropZone) return;
+
+                    const touch = e.changedTouches[0];
+                    const dropRect = dropZone.getBoundingClientRect();
+
+                    if (
+                        touch.clientX >= dropRect.left &&
+                        touch.clientX <= dropRect.right &&
+                        touch.clientY >= dropRect.top &&
+                        touch.clientY <= dropRect.bottom
+                    ) {
+                        if (!selectedSticks.includes(len)) {
+                            addOrToggleStick(len);
+                        }
+                    }
+                    setTimeout(() => btn.classList.remove('is-dragging'), 100);
+                });
+            });
+
+            // Drop Zone Events
+            if (dropZone) {
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('drop-target-active');
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('drop-target-active');
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('drop-target-active');
+                    if (dropHintOverlay) dropHintOverlay.classList.add('opacity-0');
+
+                    if (draggedStickLength) {
+                        if (!selectedSticks.includes(draggedStickLength)) {
+                            addOrToggleStick(draggedStickLength);
+                        }
+                    }
+                });
+            }
+
+            // Reset Action
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    sound.playClick();
+                    selectedSticks = [];
+                    resetBridgeVisuals();
+                    updateUI();
+                });
+            }
+
+            function updateUI() {
+                stickBtns.forEach(btn => {
+                    const len = parseInt(btn.dataset.len);
+                    const isSelected = selectedSticks.includes(len);
+                    const checkBadge = btn.querySelector('.check-badge');
+
+                    if (isSelected) {
+                        btn.classList.add('border-emerald-500', 'bg-emerald-50/60', 'ring-2', 'ring-emerald-200');
+                        btn.classList.remove('border-slate-200', 'bg-slate-50');
+                        if (checkBadge) checkBadge.classList.remove('hidden');
+                    } else {
+                        btn.classList.remove('border-emerald-500', 'bg-emerald-50/60', 'ring-2', 'ring-emerald-200');
+                        btn.classList.add('border-slate-200', 'bg-slate-50');
+                        if (checkBadge) checkBadge.classList.add('hidden');
+                    }
+                });
+
+                // Update Step 1 Slot 1
+                if (slot1) {
+                    if (selectedSticks.length >= 1) {
+                        slot1.textContent = `${selectedSticks[0]} cm`;
+                        slot1.className = "min-w-[75px] h-9 px-2 bg-emerald-100 border-2 border-emerald-400 rounded-lg flex items-center justify-center text-emerald-900 font-black text-sm shadow-sm animate-pulse";
+                    } else {
+                        slot1.textContent = "樹枝 1";
+                        slot1.className = "min-w-[75px] h-9 px-2 bg-white border-2 border-dashed border-sky-300 rounded-lg flex items-center justify-center text-sky-600 font-bold text-xs shadow-inner";
+                    }
+                }
+
+                // Update Step 1 Calculation Result Box
+                let step1Sum = null;
+                if (selectedSticks.length >= 1) {
+                    step1Sum = FIXED_LENGTH + selectedSticks[0];
+                    if (step1Box) {
+                        step1Box.textContent = `${step1Sum} cm`;
+                        step1Box.className = "bg-amber-100 text-amber-900 px-3 py-1 rounded-lg min-w-[70px] font-black text-sm border border-amber-300";
+                    }
+                    if (step1CarryBox) {
+                        step1CarryBox.textContent = `${step1Sum} cm`;
+                        step1CarryBox.className = "bg-amber-100 text-amber-900 px-3 py-1 rounded-lg min-w-[70px] font-black text-sm border border-amber-300";
+                    }
+                } else {
+                    if (step1Box) {
+                        step1Box.textContent = "? cm";
+                        step1Box.className = "bg-slate-200 text-slate-600 px-3 py-1 rounded-lg min-w-[70px] font-bold";
+                    }
+                    if (step1CarryBox) {
+                        step1CarryBox.textContent = "? cm";
+                        step1CarryBox.className = "bg-slate-200 text-slate-600 px-3 py-1 rounded-lg min-w-[70px] font-bold";
+                    }
+                }
+
+                // Update Step 2 Slot 2 & Final Result
+                if (slot2) {
+                    if (selectedSticks.length >= 2) {
+                        slot2.textContent = `${selectedSticks[1]} cm`;
+                        slot2.className = "min-w-[75px] h-9 px-2 bg-emerald-100 border-2 border-emerald-400 rounded-lg flex items-center justify-center text-emerald-900 font-black text-sm shadow-sm animate-pulse";
+                    } else {
+                        slot2.textContent = "樹枝 2";
+                        slot2.className = "min-w-[75px] h-9 px-2 bg-white border-2 border-dashed border-sky-300 rounded-lg flex items-center justify-center text-sky-600 font-bold text-xs shadow-inner";
+                    }
+                }
+
+                if (totalBox) {
+                    if (selectedSticks.length === 2) {
+                        const total = step1Sum + selectedSticks[1];
+                        totalBox.textContent = `${total} cm`;
+                        
+                        if (finalAnsText) finalAnsText.textContent = `${total}`;
+
+                        if (total > TARGET_GAP) {
+                            totalBox.className = "bg-emerald-500 text-white px-3 py-1 rounded-lg min-w-[80px] font-black text-base shadow-md animate-bounce";
+                            if (finalAnswerBadge) finalAnswerBadge.className = "text-center font-black text-emerald-800 bg-emerald-100 border-2 border-emerald-400 rounded-lg py-1 px-3 mt-1 text-sm sm:text-base";
+                        } else {
+                            totalBox.className = "bg-rose-500 text-white px-3 py-1 rounded-lg min-w-[80px] font-black text-base shadow-md";
+                            if (finalAnswerBadge) finalAnswerBadge.className = "text-center font-black text-rose-800 bg-rose-100 border-2 border-rose-300 rounded-lg py-1 px-3 mt-1 text-sm sm:text-base";
+                        }
+
+                        if (testBridgeBtn) {
+                            testBridgeBtn.disabled = false;
+                            testBridgeBtn.className = "flex-1 max-w-sm py-3 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-base transition shadow-lg flex items-center justify-center gap-2 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0";
+                        }
+                        if (testBtnText) testBtnText.textContent = "開橋測試！🚀";
+                    } else {
+                        totalBox.textContent = "? cm";
+                        totalBox.className = "bg-slate-200 text-slate-600 px-3 py-1 rounded-lg min-w-[80px] font-bold";
+                        if (finalAnsText) finalAnsText.textContent = "?";
+                        if (finalAnswerBadge) finalAnswerBadge.className = "text-center font-black text-slate-600 bg-white border border-slate-200 rounded-lg py-1 px-3 mt-1 text-sm sm:text-base";
+
+                        if (testBridgeBtn) {
+                            testBridgeBtn.disabled = true;
+                            testBridgeBtn.className = "flex-1 max-w-sm py-3 px-6 rounded-xl bg-slate-300 text-slate-500 font-black text-base transition shadow-md flex items-center justify-center gap-2 cursor-not-allowed";
+                        }
+                        if (testBtnText) testBtnText.textContent = `請再選取 ${2 - selectedSticks.length} 根樹枝`;
+                    }
+                }
+            }
+
+            function renderDynamicBridgePreview() {
+                if (!dynamicBridgeGroup) return;
+                dynamicBridgeGroup.innerHTML = '';
+                dynamicBridgeGroup.setAttribute('transform', 'translate(313, 248)');
+
+                if (selectedSticks.length === 0) {
+                    if (dropZoneText) dropZoneText.textContent = "把樹枝拖到這裡接橋 🪵";
+                    return;
+                }
+
+                let currentX = 0;
+                selectedSticks.forEach((stick, idx) => {
+                    const stickPx = stick * SCALE_PX_PER_CM;
+                    const color = idx === 0 ? "#854d0e" : "#a16207";
+                    const stroke = idx === 0 ? "#451a03" : "#713f12";
+
+                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    g.setAttribute('transform', `translate(${currentX}, 0)`);
+                    g.innerHTML = `
+                        <!-- Wood Stick Plank -->
+                        <rect x="0" y="2" width="${stickPx}" height="14" rx="3" fill="${color}" stroke="${stroke}" stroke-width="1.5"/>
+                        <!-- Floating Length Label Badge Centered above Stick -->
+                        <rect x="${(stickPx / 2) - 22}" y="-20" width="44" height="16" rx="4" fill="#fef3c7" stroke="#b45309" stroke-width="1"/>
+                        <text x="${stickPx / 2}" y="-8" font-weight="900" font-size="10" fill="#78350f" text-anchor="middle">+${stick}cm</text>
+                    `;
+                    dynamicBridgeGroup.appendChild(g);
+                    currentX += stickPx;
+                });
+
+                if (dropZoneText) {
+                    if (selectedSticks.length === 1) {
+                        dropZoneText.textContent = "已放置 1 根！請再接上 1 根 🪵";
+                    } else {
+                        dropZoneText.textContent = "樹枝已接好！點擊「開橋測試」";
+                    }
+                }
+            }
+
+            function resetBridgeVisuals() {
+                if (dynamicBridgeGroup) {
+                    dynamicBridgeGroup.innerHTML = '';
+                    dynamicBridgeGroup.setAttribute('transform', 'translate(313, 248)');
+                }
+                if (yelinChar) {
+                    yelinChar.classList.remove('is-walking');
+                    yelinChar.setAttribute('transform', 'translate(160, 182)');
+                }
+                if (victoryUmbrella) victoryUmbrella.setAttribute('opacity', '0');
+                if (dropZoneText) dropZoneText.textContent = "把樹枝拖到這裡接橋 🪵";
+            }
+
+            if (testBridgeBtn) {
+                testBridgeBtn.addEventListener('click', () => {
+                    if (selectedSticks.length < 2) return;
+                    
+                    testBridgeBtn.disabled = true;
+                    sound.playBuild();
+
+                    const stick1 = selectedSticks[0];
+                    const stick2 = selectedSticks[1];
+                    const step1Sum = FIXED_LENGTH + stick1;
+                    const totalCm = step1Sum + stick2;
+
+                    renderDynamicBridgePreview();
+
+                    const startX = 160;
+                    const targetSuccessX = 650;
+                    const bridgeEndPixelX = 240 + (totalCm * SCALE_PX_PER_CM) - 25;
+                    
+                    const isSuccess = totalCm > TARGET_GAP;
+                    const maxWalkX = isSuccess ? targetSuccessX : bridgeEndPixelX;
+                    
+                    let currentX = startX;
+                    const flatBridgeY = 182; // Perfectly straight horizontal Y position along the bridge line
+                    
+                    if (yelinChar) yelinChar.classList.add('is-walking');
+
+                    const walkInterval = setInterval(() => {
+                        currentX += 5;
+                        if (currentX >= maxWalkX) {
+                            clearInterval(walkInterval);
+                            if (yelinChar) yelinChar.classList.remove('is-walking');
+
+                            if (isSuccess) {
+                                sound.playWin();
+                                if (victoryUmbrella) victoryUmbrella.setAttribute('opacity', '1');
+                                
+                                if (typeof confetti === 'function') {
+                                    confetti({
+                                        particleCount: 80,
+                                        spread: 70,
+                                        origin: { y: 0.6 }
+                                    });
+                                }
+
+                                const formulaHTML = `
+                                    ① 22 + ${stick1} = ${step1Sum} cm<br/>
+                                    ② ${step1Sum} + ${stick2} = ${totalCm} cm<br/>
+                                    <span class="text-emerald-700 text-lg font-black">答：${totalCm} 公分 (> 97cm 跨越成功!)</span>
+                                `;
+
+                                setTimeout(() => {
+                                    showResultModal(
+                                        true,
+                                        "🎉 太棒了！順利會合了！",
+                                        formulaHTML,
+                                        `恭喜！經過兩步驟計算，木橋總長度為 ${totalCm} 公分，大於斷崖的 97 公分！燁琳老師順利走過大木橋，拿遮陽傘幫小白老師擋住了刺眼的太陽！`,
+                                        true
+                                    );
+                                }, 500);
+
+                            } else {
+                                sound.playFail();
+
+                                if (dynamicBridgeGroup) {
+                                    dynamicBridgeGroup.setAttribute('transform', 'translate(313, 248) rotate(25, 0, 5)');
+                                }
+
+                                let fallStep = 0;
+                                let currentY = flatBridgeY;
+                                const fallInterval = setInterval(() => {
+                                    fallStep += 1;
+                                    currentY += 12;
+                                    currentX += 1;
+                                    
+                                    if (yelinChar) {
+                                        yelinChar.setAttribute('transform', `translate(${currentX}, ${currentY}) rotate(${fallStep * 15})`);
+                                    }
+
+                                    if (fallStep > 18) {
+                                        clearInterval(fallInterval);
+
+                                        let desc = "";
+                                        if (totalCm === 96) {
+                                            desc = `近在咫尺，好可惜！<br/>① 22 + ${stick1} = ${step1Sum} 公分<br/>② ${step1Sum} + ${stick2} = 96 公分<br/><strong class="text-rose-600">答：96 公分（只差 1 公分就接到了！）</strong>`;
+                                        } else {
+                                            desc = `這兩根樹枝長度不夠！<br/>① 22 + ${stick1} = ${step1Sum} 公分<br/>② ${step1Sum} + ${stick2} = ${totalCm} 公分<br/><strong class="text-rose-600">答：${totalCm} 公分（距離 97 公分還差很大！）</strong>`;
+                                        }
+
+                                        const formulaHTML = `
+                                            ① 22 + ${stick1} = ${step1Sum} cm<br/>
+                                            ② ${step1Sum} + ${stick2} = ${totalCm} cm<br/>
+                                            <span class="text-rose-600 font-black">答：${totalCm} 公分 (< 97cm 掉下懸崖了)</span>
+                                        `;
+
+                                        setTimeout(() => {
+                                            showResultModal(
+                                                false,
+                                                totalCm === 96 ? "😭 差一點點就到了！" : "⚠️ 長度不足，掉下懸崖了！",
+                                                formulaHTML,
+                                                desc,
+                                                false
+                                            );
+                                        }, 300);
+                                    }
+                                }, 30);
+                            }
+                        } else {
+                            if (yelinChar) yelinChar.setAttribute('transform', `translate(${currentX}, ${flatBridgeY})`);
+                        }
+                    }, 40);
+                });
+            }
+
+            function showResultModal(isSuccess, title, formula, desc, showPhoto) {
+                if (modalTitle) modalTitle.textContent = title;
+                if (modalFormula) modalFormula.textContent = formula;
+                if (modalDesc) modalDesc.innerHTML = desc;
+
+                if (modalIconContainer) {
+                    if (isSuccess) {
+                        modalIconContainer.className = "w-20 h-20 mx-auto -mt-14 rounded-full flex items-center justify-center text-4xl shadow-lg mb-4 bg-emerald-500 text-white ring-4 ring-emerald-100";
+                        modalIconContainer.textContent = "📸";
+                        if (photoFrame) photoFrame.classList.remove('hidden');
+                        sound.playSnap();
+                    } else {
+                        modalIconContainer.className = "w-20 h-20 mx-auto -mt-14 rounded-full flex items-center justify-center text-4xl shadow-lg mb-4 bg-rose-500 text-white ring-4 ring-rose-100";
+                        modalIconContainer.textContent = "💔";
+                        if (photoFrame) photoFrame.classList.add('hidden');
+                    }
+                }
+
+                if (resultModal && modalCard) {
+                    resultModal.classList.remove('opacity-0', 'pointer-events-none');
+                    modalCard.classList.remove('scale-90');
+                    modalCard.classList.add('scale-100');
+                }
+            }
+
+            if (modalCloseBtn) {
+                modalCloseBtn.addEventListener('click', () => {
+                    sound.playClick();
+                    if (resultModal && modalCard) {
+                        resultModal.classList.add('opacity-0', 'pointer-events-none');
+                        modalCard.classList.remove('scale-100');
+                        modalCard.classList.add('scale-90');
+                    }
+                });
+            }
+
+            function openGuide() {
+                sound.playClick();
+                if (resultModal) resultModal.classList.add('opacity-0', 'pointer-events-none');
+                if (guideModal) guideModal.classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            if (modalMathGuideBtn) modalMathGuideBtn.addEventListener('click', openGuide);
+            if (mathGuideBtn) mathGuideBtn.addEventListener('click', openGuide);
+
+            if (guideCloseBtn) {
+                guideCloseBtn.addEventListener('click', () => {
+                    sound.playClick();
+                    if (guideModal) guideModal.classList.add('opacity-0', 'pointer-events-none');
+                });
+            }
+
+            // Initial UI Update
+            updateUI();
+        });
+    </script>
+</body>
+</html>
